@@ -1,33 +1,48 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from "react"
+import Header from "./components/Header"
+import SearchPage from "./components/SearchPage"
+import DetailPage from "./components/DetailPage"
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [data, setData] = useState([])
+  const [limit, setLimit] = useState(12)
+  const [displayGrid, setdisplayGrid] = useState(true)
+  const [detail, setDetail] = useState({})
+
+  useEffect(() => {
+    fetch("/data.json", { mode: "no-cors" })
+      .then(res => res.json())
+      .then(jsonArray => {
+        const filteredArray = jsonArray.slice(0, limit)
+        setData([...filteredArray])
+      })
+  }, [limit])
+
+  function requestMoreData() {
+    setLimit(prevLimit => prevLimit + 6)
+  }
+
+  function switchViewMode(id) {
+    if (id) {
+      setdisplayGrid(prevDisplayGrid => !prevDisplayGrid)
+      setDetail(data.find(entry => entry.id === id) || null)
+    } else {
+      setdisplayGrid(true)
+    }
+  }
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <Header switchViewMode={switchViewMode} />
+      {displayGrid ? (
+        <SearchPage
+          data={data}
+          requestMoreData={requestMoreData}
+          switchViewMode={switchViewMode}
+        />
+      ) : (
+        <DetailPage data={detail} />
+      )}
     </>
   )
 }
